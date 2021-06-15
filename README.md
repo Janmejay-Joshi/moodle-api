@@ -28,7 +28,7 @@ Install dependencies
 Start the server
 
 ```bash
-  python3 -m flask run --no-reload
+  python -m flask run --no-reload
 ```
 
   
