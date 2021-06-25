@@ -9,6 +9,7 @@ from lxml import html
 from bs4 import BeautifulSoup
 from os import environ
 from deta import Deta
+from dateutil.tz import gettz
 
 deta = Deta(environ.get("DETA_PROJECT_KEY"))
 
@@ -66,9 +67,12 @@ class Logger:
 
 
             Detail_object = Links.Scraper(session_requests)
+
+            dtobj = datetime.now(tz=gettz('Asia/Kolkata'))
+
             Details = {
                        "key":"2wuho2fvwmnh",
-                       "last_updated":str(datetime.now()),
+                       "last_updated":str(dtobj),
                        "data":{
                            "assignments":[],
                            "quizes":[]
