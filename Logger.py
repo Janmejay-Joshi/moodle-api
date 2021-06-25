@@ -1,10 +1,10 @@
 
 # load Required libraries and method
 
-import Links 
+import Links
 from requests import session
 from datetime import datetime
-from json import dumps, loads 
+from json import dumps, loads
 from lxml import html
 from bs4 import BeautifulSoup
 from os import environ
@@ -24,14 +24,14 @@ class Logger:
 
         USERNAME = environ.get(f'USERNAME_{self.branch}')
         PASSWORD = environ.get(f'PASSWORD_{self.branch}')
-        LOGIN_URL = "http://op2020.mitsgwalior.in/login/index.php" 
+        LOGIN_URL = "http://op2020.mitsgwalior.in/login/index.php"
 
         cred0 = [LOGIN_URL,USERNAME,PASSWORD]
         return cred0
 
     def Ret_Links(self):
-            
-            LOGIN_URL,USERNAME,PASSWORD = self.cred 
+
+            LOGIN_URL,USERNAME,PASSWORD = self.cred
             #Aporach Schedule
             print("Loging in...", end = "\r")
 
@@ -45,8 +45,8 @@ class Logger:
 
             # Create payload
             payload = {
-                "username": USERNAME, 
-                "password": PASSWORD, 
+                "username": USERNAME,
+                "password": PASSWORD,
                 "logintoken": authenticity_token
             }
 
@@ -64,8 +64,21 @@ class Logger:
             with open('./metadata/metadata.json', mode='r') as my_file:
                 lectures = loads(my_file.read())[f"{self.branch}"]
 
+            db = deta.Base(self.branch)
+
+            database_time = db.get("2wuho2fvwmnh")["last_updated"]
+            print(database_time)
+
             Detail_object = Links.Scraper(session_requests)
-            Details = {"key":"2wuho2fvwmnh","last_updated":str(datetime.now()),"data":{"assignments":[],"quizes":[]}}
+            Details = {
+                       "key":"2wuho2fvwmnh",
+                       "last_updated":str(datetime.now()),
+                "last_update":str(datetime.now() - datetime.strptime(database_time, "%Y-%m-%d %H:%M:%S.%f")),
+                       "data":{
+                           "assignments":[],
+                           "quizes":[]
+                            }
+                       }
 
             for lecture in lectures:
                 try:
@@ -78,9 +91,8 @@ class Logger:
                 Details["data"]["assignments"] = sorted(Details["data"]["assignments"],key =  lambda k: int(k["time_left"].split(" ")[0]) if len(k["time_left"].split(" ")) >= 3 else 0)
                 Details["data"]["assignments"] = sorted(Details["data"]["assignments"],key =  lambda k: k["due"])
             except Exception as e:
-                print(e) 
+                print(e)
 
-            db = deta.Base(self.branch)
             db.put(Details)
-            
+
             return Details

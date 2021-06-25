@@ -60,7 +60,7 @@ class Scraper():
         result = self.session.get(Lecture, headers = dict(referer = Lecture))
         soup = BeautifulSoup(result.content, 'lxml')
         Sections = soup.find_all("li",attrs={"class":"section main clearfix"})
-        
+
         for_All = []
         for Section in Sections:
             Assingments_Links = []
