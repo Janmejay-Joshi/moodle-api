@@ -64,16 +64,11 @@ class Logger:
             with open('./metadata/metadata.json', mode='r') as my_file:
                 lectures = loads(my_file.read())[f"{self.branch}"]
 
-            db = deta.Base(self.branch)
-
-            database_time = db.get("2wuho2fvwmnh")["last_updated"]
-            print(database_time)
 
             Detail_object = Links.Scraper(session_requests)
             Details = {
                        "key":"2wuho2fvwmnh",
                        "last_updated":str(datetime.now()),
-                "last_update":str(datetime.now() - datetime.strptime(database_time, "%Y-%m-%d %H:%M:%S.%f")),
                        "data":{
                            "assignments":[],
                            "quizes":[]
@@ -93,6 +88,7 @@ class Logger:
             except Exception as e:
                 print(e)
 
+            db = deta.Base(self.branch)
             db.put(Details)
 
             return Details
