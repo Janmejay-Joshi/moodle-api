@@ -1,9 +1,6 @@
 # Import WebScraping and Form Filling Libraries
 
 from bs4 import BeautifulSoup
-import requests
-import lxml
-import cchardet
 from datetime import datetime
 from deta import Deta
 from os import environ
@@ -64,7 +61,7 @@ class Scraper():
         for_All = []
         for Section in Sections:
             Assingments_Links = []
-            Quizes_Links = []
+            #Quizes_Links = []
 
             try:
                 Title = Section.find("h3",attrs={"class":"sectionname"}).find('a').contents[0]
@@ -105,7 +102,7 @@ class Scraper():
             Due = Table.find("td",attrs={"class":"cell c1 lastcol"}).contents[0]
             Status = "Done";
 
-        except Exception as e:
+        except Exception:
             Due = Table.find_all("td",attrs={"class":"cell c1 lastcol"})[1].contents[0]
             Status = "Due";
 

@@ -4,9 +4,8 @@
 import Links
 from requests import session
 from datetime import datetime
-from json import dumps, loads
+from json import loads
 from lxml import html
-from bs4 import BeautifulSoup
 from os import environ
 from deta import Deta
 from dateutil.tz import gettz
