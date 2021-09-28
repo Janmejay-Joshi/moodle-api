@@ -8,10 +8,11 @@ from os import environ
 deta = Deta(environ.get("DETA_PROJECT_KEY"))
 db = deta.Base("Completed")
 
-class Scraper():
+
+class Scraper:
 
     """
-        Attendance class defing and allocating prerequisits which are required before marking attendance
+    Attendance class defing and allocating prerequisits which are required before marking attendance
     """
 
     def __init__(self, Session):
@@ -20,64 +21,76 @@ class Scraper():
         self.session = Session
         self.id = 0
 
-    def Assingment_To_Json(self,Title,Details):
+    def Assingment_To_Json(self, Title, Details) -> list:
         now = datetime.now()
         Pretty = []
         Completed = self.Checked
 
         for Detail in Details:
-            Time_Left = str(datetime.strptime(Detail[1],"%A, %d %B %Y, %I:%M %p") - now)[:-7]
+            Time_Left = str(
+                datetime.strptime(Detail[1], "%A, %d %B %Y, %I:%M %p") - now
+            )[:-7]
             Det = {
-                    "id": self.id,
-                    "subject":Title,
-                    "title":Detail[0],
-                    "due_date":Detail[1],
-                    "status":Detail[2],
-                    "link":Detail[3],
-                    "time_left": Time_Left,
-                    }
+                "id": self.id,
+                "subject": Title,
+                "title": Detail[0],
+                "due_date": Detail[1],
+                "status": Detail[2],
+                "link": Detail[3],
+                "time_left": Time_Left,
+            }
 
-            if (Time_Left[0] == "-"):
+            if Time_Left[0] == "-":
                 Det["time_left"] = Det["time_left"][1:]
-                Det["due"]=True
+                Det["due"] = True
                 Completed.append(int(Det["link"][-4:]))
 
             else:
-                Det["due"]=False
+                Det["due"] = False
                 Pretty.append(Det)
 
             self.id += 1
 
-        db.put({"key":"ignore","links":Completed})
+        db.put({"key": "ignore", "links": Completed})
 
-        return Pretty;
+        return Pretty
 
-    def Scrape(self,Lecture):
+    def Scrape(self, Lecture) -> list:
 
-        result = self.session.get(Lecture, headers = dict(referer = Lecture))
-        soup = BeautifulSoup(result.content, 'lxml')
-        Sections = soup.find_all("li",attrs={"class":"section main clearfix"})
+        result = self.session.get(Lecture, headers=dict(referer=Lecture))
+        soup = BeautifulSoup(result.content, "lxml")
+        Sections = soup.find_all("li", attrs={"class": "section main clearfix"})
 
         for_All = []
         for Section in Sections:
             Assingments_Links = []
-            #Quizes_Links = []
+            # Quizes_Links = []
 
             try:
-                Title = Section.find("h3",attrs={"class":"sectionname"}).find('a').contents[0]
+                Title = (
+                    Section.find("h3", attrs={"class": "sectionname"})
+                    .find("a")
+                    .contents[0]
+                )
 
                 try:
-                    Assingments = Section.find_all("li", attrs={"class":"activity assign modtype_assign"})
-                    Assingments_Links = [ Itter.find("a",attrs={"class":"aalink"})['href'] for Itter in Assingments ]
+                    Assingments = Section.find_all(
+                        "li", attrs={"class": "activity assign modtype_assign"}
+                    )
+                    Assingments_Links = [
+                        Itter.find("a", attrs={"class": "aalink"})["href"]
+                        for Itter in Assingments
+                    ]
 
                 except Exception:
                     pass
 
-
                 Assingment_Details = []
 
                 for Assingment_Link in Assingments_Links:
-                    Assingment_Details.append(self.Find_Assingments(Lecture,Assingment_Link))
+                    Assingment_Details.append(
+                        self.Find_Assingments(Lecture, Assingment_Link)
+                    )
 
                 if Assingment_Details != []:
                     for_All.extend(self.Assingment_To_Json(Title, Assingment_Details))
@@ -87,23 +100,25 @@ class Scraper():
 
         return for_All
 
-    def Find_Assingments(self,Lecture, Link):
+    def Find_Assingments(self, Lecture, Link) -> list:
 
-        result = self.session.get(Link , headers = dict(referer = Lecture))
-        soup = BeautifulSoup(result.content, 'lxml')
+        result = self.session.get(Link, headers=dict(referer=Lecture))
+        soup = BeautifulSoup(result.content, "lxml")
 
-        Table = soup.find("table",attrs={"class":"generaltable"})
-        Main = soup.find("div", attrs={"role":"main"})
+        Table = soup.find("table", attrs={"class": "generaltable"})
+        Main = soup.find("div", attrs={"role": "main"})
 
         Title = Main.find("h2").contents[0]
 
         try:
-            Table.find("td", attrs={"class":"submissionstatussubmitted cell c1 lastcol"}).contents[0]
-            Due = Table.find("td",attrs={"class":"cell c1 lastcol"}).contents[0]
-            Status = "Done";
+            Table.find(
+                "td", attrs={"class": "submissionstatussubmitted cell c1 lastcol"}
+            ).contents[0]
+            Due = Table.find("td", attrs={"class": "cell c1 lastcol"}).contents[0]
+            Status = "Done"
 
         except Exception:
-            Due = Table.find_all("td",attrs={"class":"cell c1 lastcol"})[1].contents[0]
-            Status = "Due";
+            Due = Table.find_all("td", attrs={"class": "cell c1 lastcol"})[1].content[0]
+            Status = "Due"
 
-        return [Title,Due,Status,Link]
+        return [Title, Due, Status, Link]
